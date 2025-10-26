@@ -1,0 +1,102 @@
+你是一名结构地震工程方向的科研助理与代码开发专家，精通 OpenSeesPy、Python 科学计算与有限元建模。
+你的任务是根据以下要求，创建并组织一个 OpenSeesPy 动力时程分析项目代码库，保证代码可运行且结构清晰。
+
+【总体目标】
+实现一个三跨七层钢筋混凝土框架结构的 OpenSeesPy 动力时程分析程序，包含模型建立、参数不确定性建模、地震输入读取与响应提取模块。
+
+【当前情况】
+已有一个两跨七层的基础框架模型，保存在 model.py 中。
+
+【需要修改与扩展的内容】
+1. **结构模型修改**
+   将原模型修改为三跨七层平面框架，层高与跨距参数化可调。节点与构件编号自动生成，边界条件与荷载模式定义清晰。使用 Python 函数封装建模逻辑，如：
+   ```python
+   def build_frame_model(n_story=7, n_span=3, bay_width=6.0, story_height=3.0):
+       ...
+
+
+参数不确定性（随机变量）
+按以下论文描述引入不确定性：
+
+A comprehensive set of stochastic model parameters is considered to capture uncertainties in material properties, geometric parameters, and structural attributes of the numerical model. These include rebar properties such as yield strength (fys), elastic modulus (Es), and strain hardening ratio (bs); concrete properties including compressive strength (fc,cover), density (ρcon), peak and ultimate compressive strains (εc,cover, εcu,cover), as well as confinement-related properties of core concrete (fc,core, fcu,core, εc,core, εcu,core). Uncertainties in geometric parameters are incorporated via reinforcement ratio (ρs), column height (Hc ), section depth (Ds), and bay width (L). In addition, the global damping ratio (ζ) is treated as an uncertain parameter to account for variations in system energy dissipation.
+For concrete-related variables, apply correlations: strong (ρ=0.8) for [(fc,core,fcu,core), (εc,core,εcu,core), (fc,core,fc,cover), (εc,cover,εcu,cover), (εc,core,εc,cover), (εcu,core,εcu,cover)]; moderate (ρ=0.64) for [(εc,core,εcu,cover), (εc,cover,εcu,core)];
+For steel-related variables (fys, Es, bs): ρ=0.8.
+Others uncorrelated (ρ=0).
+
+要求：
+
+使用 NumPy 或 SciPy 实现高斯分布抽样与协方差矩阵生成；
+
+每次建模前随机采样一组参数；
+
+用单独文件 uncertainty.py 定义函数 sample_parameters()；
+
+返回字典 { 'fys': ..., 'Es': ..., 'bs': ..., 'fc_cover': ..., ... }；
+
+确保协方差矩阵对称正定。
+
+地震动输入与响应记录
+
+从当前目录下 scaled_data/ 自动读取多个地震动文件（格式：.txt 或 .AT2），每个文件包含加速度时程；
+
+在 analysis.py 中循环读取地震动文件并执行分析；
+
+使用 ops.recorder 记录节点位移、层间位移角、底部剪力等；
+
+输出结果保存到 results/ 目录中，以地震文件名为前缀自动命名。
+
+模块化组织
+请将代码组织为以下模块：
+
+.
+├── model.py          # 框架建模（节点、单元、约束、荷载）
+├── uncertainty.py    # 参数不确定性建模与相关结构定义
+├── analysis.py       # 动力时程分析与地震记录循环
+├── utils.py          # 常用函数（如记录器创建、数据导出）
+├── main.py           # 主程序：采样参数 → 建模 → 时程分析 → 结果汇总
+└── scaled_data/      # 地震动输入文件
+
+
+分析设置
+
+使用 Newmark-β 积分；
+
+阻尼比 ζ 作为随机变量传入；
+
+输出每层最大层间位移比与最大顶点位移；
+
+分析完成后自动清理模型（ops.wipe()）；
+
+若出现收敛问题，应在日志中记录而不终止程序。
+
+代码风格与输出
+
+所有函数须有 docstring；
+
+各文件顶部写明用途；
+
+使用 logging 模块记录每次仿真参数与结果；
+
+要求可在 Mac/Linux 上直接运行（不依赖 Windows 动态库）；
+
+不生成 GUI，可通过命令行运行：python main.py。
+
+【补充要求】
+
+确保所有物理量单位一致（m, N, kg, s）；
+
+使用简洁明了的变量名；
+
+保证每个模块可单独导入运行；
+
+输出文件命名含日期时间戳；
+
+若部分参数分布或相关性缺失，请合理假设并在注释中说明。
+
+输出：
+
+请生成所有 .py 文件的完整内容；
+
+在必要处添加解释性注释；
+
+不输出解释性文字，仅输出 Python 源代码。
